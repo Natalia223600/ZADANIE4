@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Przesyłanie Strumieniowe Wideo przez HTTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: #007bff;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+        }
+
+        ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .image {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 2rem;
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Przesyłanie Strumieniowe Wideo przez HTTP</h1>
+    </header>
+
+    <div class="container">
+        <h2>Podstawy Przesyłania Strumieniowego</h2>
+        <p>Przesyłanie strumieniowe polega na dostarczaniu i odtwarzaniu treści multimedialnych w sposób ciągły, bez konieczności pobierania całego pliku przed rozpoczęciem odtwarzania. Zamiast tego, treść jest dzielona na mniejsze fragmenty, które są pobierane i odtwarzane w miarę potrzeb. Takie podejście pozwala na szybsze rozpoczęcie odtwarzania i dynamiczne dostosowywanie jakości wideo do bieżących warunków sieciowych.</p>
+
+        <h2>Adaptacyjne Przesyłanie Strumieniowe</h2>
+        <p>Adaptacyjne przesyłanie strumieniowe to technika, która umożliwia dostosowanie jakości wideo do zmieniających się warunków sieciowych i możliwości urządzenia użytkownika. W praktyce oznacza to, że wideo jest kodowane w różnych bitrate'ach, a odtwarzacz wybiera odpowiednią jakość w zależności od dostępnej przepustowości i wydajności urządzenia. Dzięki temu użytkownik doświadcza płynnego odtwarzania bez buforowania, nawet przy zmiennych warunkach sieciowych.</p>
+
+        <div class="image">
+            <img src="https://via.placeholder.com/800x400" alt="Adaptacyjne przesyłanie strumieniowe">
+        </div>
+
+        <h2>Protokół HTTP Live Streaming (HLS)</h2>
+        <p>HTTP Live Streaming (HLS) to protokół opracowany przez firmę Apple, który stał się jednym z najpopularniejszych standardów przesyłania strumieniowego wideo. HLS dzieli treść wideo na małe segmenty i dostarcza je za pomocą standardowych serwerów HTTP. Odtwarzacz pobiera te segmenty na bieżąco, co pozwala na adaptacyjne dostosowywanie jakości wideo do warunków sieciowych.</p>
+
+        <h3>Zalety HLS:</h3>
+        <ul>
+            <li><strong>Szeroka kompatybilność:</strong> HLS jest obsługiwany na większości urządzeń, w tym na iOS, Android, smart TV i przeglądarkach internetowych.</li>
+            <li><strong>Adaptacyjne bitrate:</strong> Możliwość dostosowywania jakości wideo w zależności od przepustowości sieci.</li>
+            <li><strong>Bezpieczeństwo:</strong> Wsparcie dla szyfrowania treści i zabezpieczeń DRM.</li>
+        </ul>
+
+        <h3>Wady HLS:</h3>
+        <ul>
+            <li><strong>Opóźnienie:</strong> Standardowy HLS może generować opóźnienia rzędu 15-30 sekund, co może być problematyczne w przypadku transmisji na żywo.</li>
+            <li><strong>Rozmiar segmentów:</strong> Większe segmenty mogą prowadzić do dłuższego czasu buforowania.</li>
+        </ul>
+
+        <h2>Protokół Dynamic Adaptive Streaming over HTTP (DASH)</h2>
+        <p>Dynamic Adaptive Streaming over HTTP (DASH) to otwarty standard opracowany przez Moving Picture Experts Group (MPEG). Podobnie jak HLS, DASH dzieli treść wideo na segmenty i dostarcza je za pomocą protokołu HTTP. Odtwarzacz analizuje manifest (plik MPD), który zawiera informacje o dostępnych segmentach i ich jakości, a następnie dynamicznie wybiera odpowiednie segmenty do pobrania.</p>
+
+        <h3>Zalety DASH:</h3>
+        <ul>
+            <li><strong>Elastyczność:</strong> Wsparcie dla różnych kodeków i formatów kontenerów.</li>
+            <li><strong>Adaptacyjne bitrate:</strong> Podobnie jak HLS, DASH umożliwia dostosowywanie jakości wideo do warunków sieciowych.</li>
+            <li><strong>Standaryzacja:</strong> Jako otwarty standard, DASH nie jest związany z konkretnym dostawcą czy platformą.</li>
+        </ul>
+
+        <h3>Wady DASH:</h3>
+        <ul>
+            <li><strong>Kompatybilność:</strong> Mniejsza kompatybilność z niektórymi urządzeniami i przeglądarkami w porównaniu z HLS.</li>
+            <li><strong>Złożoność implementacji:</strong> Wymaga bardziej zaawansowanej konfiguracji i wsparcia po stronie serwera i odtwarzacza.</li>
+        </ul>
+
+        <h2>Porównanie HLS i DASH</h2>
+        <p>Oba protokoły mają na celu dostarczanie adaptacyjnego przesyłania strumieniowego, ale różnią się pod względem kompatybilności, opóźnień i wsparcia dla różnych formatów. Wybór między HLS a DASH zależy od specyficznych wymagań projektu, docelowej grupy odbiorców i platform docelowych.</p>
+
+        <h2>Implementacja Przesyłania Strumieniowego w Praktyce</h2>
+        <p>Aby wdrożyć przesyłanie strumieniowe wideo za pomocą HLS lub DASH, należy przejść przez kilka kluczowych kroków:</p>
+        <ol>
+            <li><strong>Kodowanie wideo:</strong> Przygotowanie treści wideo w różnych bitrate'ach i rozdzielczościach.</li>
+            <li><strong>Segmentacja:</strong> Podział zakodowanego wideo na mniejsze fragmenty (segmenty).</li>
+            <li><strong>Generowanie manifestu:</strong> Utworzenie pliku manifestu (np. M3U8 dla HLS lub MPD dla DASH), który zawiera informacje o dostępnych segmentach i ich parametrach.</li>
+            <li><strong>Dostarczenie treści:</strong> Udostępnienie segmentów i manifestu za pomocą serwera HTTP lub sieci CDN.</li>
+            <li><strong>Odtwarzanie:</strong> Użycie odtwarzacza obsługującego wybrany protokół.</li>
+        </ol>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Przesyłanie Strumieniowe. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+</body>
+</html>
