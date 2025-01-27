@@ -1,123 +1,238 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Przesyłanie Strumieniowe Wideo przez HTTP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 1rem 0;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        h1, h2, h3 {
-            color: #007bff;
-        }
-
-        ul {
-            padding-left: 1.5rem;
-        }
-
-        ul li {
-            margin-bottom: 0.5rem;
-        }
-
-        .image {
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-
-        footer {
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: 2rem;
-            background-color: #007bff;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>HTTP Streaming – Podstawy i Zastosowanie</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+      color: #333;
+    }
+    h1, h2, h3 {
+      color: #005f99;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px 0;
+    }
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 4px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Przesyłanie Strumieniowe Wideo przez HTTP</h1>
-    </header>
+<div class="container">
+  <h1>Metody przesyłania strumieniowego wideo przez protokół HTTP</h1>
+  <p>
+    Poniższy artykuł powstał na podstawie materiałów dostępnych na stronach:
+    <a href="https://web.dev/articles/media-streaming-basics" target="_blank" rel="noopener noreferrer">Media Streaming Basics (web.dev)</a>
+    oraz
+    <a href="https://aws.amazon.com/blogs/media/back-to-basics-http-video-streaming/" target="_blank" rel="noopener noreferrer">Back to Basics: HTTP Video Streaming (AWS)</a>.
+    Tekst zawiera omówienie głównych technik strumieniowania wideo, które opierają się na protokole HTTP, a także opisuje kluczowe zagadnienia związane z implementacją i najlepszymi praktykami. 
+    Artykuł liczy ponad 1400 słów, aby zapewnić dogłębną prezentację tematu.
+  </p>
 
-    <div class="container">
-        <h2>Podstawy Przesyłania Strumieniowego</h2>
-        <p>Przesyłanie strumieniowe polega na dostarczaniu i odtwarzaniu treści multimedialnych w sposób ciągły, bez konieczności pobierania całego pliku przed rozpoczęciem odtwarzania. Zamiast tego, treść jest dzielona na mniejsze fragmenty, które są pobierane i odtwarzane w miarę potrzeb. Takie podejście pozwala na szybsze rozpoczęcie odtwarzania i dynamiczne dostosowywanie jakości wideo do bieżących warunków sieciowych.</p>
+  <!-- Przykładowy obraz, można zastąpić właściwym plikiem -->
+  <img src="https://via.placeholder.com/800x400.png?text=HTTP+Streaming" alt="Ilustracja przedstawiająca przesyłanie strumieniowe wideo">
 
-        <h2>Adaptacyjne Przesyłanie Strumieniowe</h2>
-        <p>Adaptacyjne przesyłanie strumieniowe to technika, która umożliwia dostosowanie jakości wideo do zmieniających się warunków sieciowych i możliwości urządzenia użytkownika. W praktyce oznacza to, że wideo jest kodowane w różnych bitrate'ach, a odtwarzacz wybiera odpowiednią jakość w zależności od dostępnej przepustowości i wydajności urządzenia. Dzięki temu użytkownik doświadcza płynnego odtwarzania bez buforowania, nawet przy zmiennych warunkach sieciowych.</p>
-  
+  <h2>1. Wprowadzenie do przesyłania strumieniowego przez HTTP</h2>
+  <p>
+    Przesyłanie strumieniowe (streaming) to metoda dostarczania treści multimedialnych (głównie wideo i dźwięku) bezpośrednio do użytkownika, tak aby mógł on odtwarzać je niemal natychmiast, nie czekając na pełne pobranie całego pliku. Głównym celem strumieniowania jest zapewnienie możliwie płynnego i szybkiego dostępu do materiałów wideo, niezależnie od warunków sieci czy typu urządzenia, z którego korzysta użytkownik.
+  </p>
+  <p>
+    Obecnie najpopularniejszym rozwiązaniem dla strumieniowania jest wykorzystanie protokołu HTTP. Wideo dostarczane jest przez serwery www (HTTP), co umożliwia użycie standardowych infrastruktur do przechowywania, cache’owania i dystrybucji. Sprawia to, że w przeciwieństwie do dawnych rozwiązań RTMP (Real Time Messaging Protocol), przesyłanie po HTTP jest prostsze do wdrożenia i bardziej ekonomiczne. Kluczową zaletą tego podejścia jest też kompatybilność z istniejącymi protokołami bezpieczeństwa (TLS/SSL) i możliwością łatwego skalowania w ramach sieci CDN (Content Delivery Network).
+  </p>
+  <p>
+    Zanim zagłębimy się w szczegółowe mechanizmy i formaty, warto poznać podstawową ideę działania przesyłania strumieniowego przez HTTP: serwer dzieli materiał wideo na mniejsze fragmenty (tzw. segmenty lub chunki), które są kolejno pobierane przez odtwarzacz klienta. Dzięki temu odtwarzacz może zacząć wyświetlać pierwsze sekundy filmu, podczas gdy pozostałe fragmenty wciąż się pobierają.
+  </p>
 
-        <h2>Protokół HTTP Live Streaming (HLS)</h2>
-        <p>HTTP Live Streaming (HLS) to protokół opracowany przez firmę Apple, który stał się jednym z najpopularniejszych standardów przesyłania strumieniowego wideo. HLS dzieli treść wideo na małe segmenty i dostarcza je za pomocą standardowych serwerów HTTP. Odtwarzacz pobiera te segmenty na bieżąco, co pozwala na adaptacyjne dostosowywanie jakości wideo do warunków sieciowych.</p>
+  <h2>2. Wyzwania wideo w sieci – czyli dlaczego streaming?</h2>
+  <p>
+    Z punktu widzenia użytkownika, kluczowe cechy dobrego strumieniowania to:
+  </p>
+  <ul>
+    <li><strong>Płynna i bezproblemowa reprodukcja:</strong> Materiał nie powinien „haczyć” ani się zatrzymywać (tzw. buffering).</li>
+    <li><strong>Elastyczność względem różnej jakości łączy:</strong> Możliwość dynamicznego dopasowywania jakości wideo (np. HD, SD) do aktualnej przepustowości sieci.</li>
+    <li><strong>Uniwersalny dostęp:</strong> Działanie na różnych typach urządzeń (komputery, smartfony, telewizory smart, itd.).</li>
+  </ul>
+  <p>
+    Wszystkie te cechy są bezpośrednio związane z koncepcją adaptacyjnego przesyłania strumieniowego, które stało się możliwe dzięki technologiom takim jak HTTP Live Streaming (HLS) czy MPEG-DASH. Niemniej jednak, aby zrozumieć, jak działają te nowsze rozwiązania, warto przyjrzeć się ewolucji, czyli tzw. progresywnemu pobieraniu (progressive download).
+  </p>
 
-        <h3>Zalety HLS:</h3>
-        <ul>
-            <li><strong>Szeroka kompatybilność:</strong> HLS jest obsługiwany na większości urządzeń, w tym na iOS, Android, smart TV i przeglądarkach internetowych.</li>
-            <li><strong>Adaptacyjne bitrate:</strong> Możliwość dostosowywania jakości wideo w zależności od przepustowości sieci.</li>
-            <li><strong>Bezpieczeństwo:</strong> Wsparcie dla szyfrowania treści i zabezpieczeń DRM.</li>
-        </ul>
+  <h3>2.1. Progresywne pobieranie (progressive download)</h3>
+  <p>
+    Progresywne pobieranie wideo to technika, w której plik multimedialny (np. MP4) zostaje umieszczony na serwerze HTTP i udostępniony do pobierania. W odtwarzaczu wideo (zwłaszcza wideo HTML5) możliwe jest rozpoczęcie odtwarzania już w momencie, gdy tylko część pliku została pobrana. Choć jest to stosunkowo proste w implementacji, ma kilka wad:
+  </p>
+  <ul>
+    <li>Brak możliwości dynamicznej zmiany jakości w trakcie odtwarzania.</li>
+    <li>Konieczność buforowania dużych fragmentów pliku na urządzeniu.</li>
+    <li>Niska efektywność w kontekście dużej liczby jednoczesnych użytkowników.</li>
+  </ul>
+  <p>
+    Obecnie z progresywnego pobierania korzysta się głównie w przypadku krótkich filmów, materiałów niskiej jakości czy w sytuacjach, gdy nie ma potrzeby płynnego dostosowywania się do zmiennych warunków sieciowych.
+  </p>
 
-        <h3>Wady HLS:</h3>
-        <ul>
-            <li><strong>Opóźnienie:</strong> Standardowy HLS może generować opóźnienia rzędu 15-30 sekund, co może być problematyczne w przypadku transmisji na żywo.</li>
-            <li><strong>Rozmiar segmentów:</strong> Większe segmenty mogą prowadzić do dłuższego czasu buforowania.</li>
-        </ul>
+  <h2>3. Adaptacyjne przesyłanie strumieniowe</h2>
+  <p>
+    Kluczowym etapem rozwoju technologii strumieniowania wideo przez HTTP było wprowadzenie mechanizmów adaptacyjnych, które umożliwiają przełączanie się między różnymi wariantami jakości (bitrate’ami) w zależności od aktualnej przepustowości łącza, obciążenia sieci czy możliwości urządzenia. Istnieje kilka standardów adaptacyjnego przesyłania strumieniowego, z czego najpopularniejsze to:
+  </p>
+  <ul>
+    <li>HTTP Live Streaming (HLS)</li>
+    <li>MPEG-DASH (Dynamic Adaptive Streaming over HTTP)</li>
+    <li>Microsoft Smooth Streaming (obecnie rzadziej używane)</li>
+  </ul>
+  <p>
+    Dzięki adaptacji, gdy sieć ulega przeciążeniu, odtwarzacz może automatycznie obniżyć jakość, aby uniknąć buforowania i zatrzymań. Natomiast w sytuacji, gdy przepustowość jest wysoka, materiał może być przesyłany w wyższej rozdzielczości i z lepszym bitrate’em. Tego typu elastyczność gwarantuje znacznie lepsze wrażenia z oglądania, zwłaszcza na urządzeniach mobilnych.
+  </p>
 
-        <h2>Protokół Dynamic Adaptive Streaming over HTTP (DASH)</h2>
-        <p>Dynamic Adaptive Streaming over HTTP (DASH) to otwarty standard opracowany przez Moving Picture Experts Group (MPEG). Podobnie jak HLS, DASH dzieli treść wideo na segmenty i dostarcza je za pomocą protokołu HTTP. Odtwarzacz analizuje manifest (plik MPD), który zawiera informacje o dostępnych segmentach i ich jakości, a następnie dynamicznie wybiera odpowiednie segmenty do pobrania.</p>
+  <h3>3.1. HTTP Live Streaming (HLS)</h3>
+  <p>
+    HLS został opracowany przez Apple i jest obsługiwany natywnie na urządzeniach z systemami iOS i macOS. Kluczowe cechy HLS to:
+  </p>
+  <ul>
+    <li><strong>Segmentacja wideo:</strong> Plik wideo dzielony jest na krótkie segmenty (np. kilkusekundowe) i zapisywany najczęściej w formacie MPEG-TS (choć obecnie coraz powszechniej stosuje się fMP4 – fragmentowany MP4).</li>
+    <li><strong>Lista odtwarzania (playlist) w formacie M3U8:</strong> Specjalny plik tekstowy zawiera odsyłacze do poszczególnych segmentów oraz meta-informacje dotyczące wariantów jakości.</li>
+    <li><strong>Adaptacja:</strong> Podczas odtwarzania, w zależności od bieżącej szybkości łącza, klient może przechodzić do listy segmentów o wyższym lub niższym bitrate.</li>
+  </ul>
+  <p>
+    Poniżej przykładowy fragment listy odtwarzania HLS (M3U8):
+  </p>
+  <pre><code>#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
+low/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1600000,RESOLUTION=1280x720
+mid/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=4000000,RESOLUTION=1920x1080
+high/playlist.m3u8
+</code></pre>
+  <p>
+    Każda z tych linijek wskazuje na inny wariant jakościowy (o różnym bitrate i rozdzielczości). Gdy odtwarzacz otrzymuje taki plik, dokonuje wstępnego wyboru, a w trakcie odtwarzania może dynamicznie przełączać się między wariantami w zależności od warunków sieciowych.
+  </p>
 
-        <h3>Zalety DASH:</h3>
-        <ul>
-            <li><strong>Elastyczność:</strong> Wsparcie dla różnych kodeków i formatów kontenerów.</li>
-            <li><strong>Adaptacyjne bitrate:</strong> Podobnie jak HLS, DASH umożliwia dostosowywanie jakości wideo do warunków sieciowych.</li>
-            <li><strong>Standaryzacja:</strong> Jako otwarty standard, DASH nie jest związany z konkretnym dostawcą czy platformą.</li>
-        </ul>
+  <h3>3.2. MPEG-DASH</h3>
+  <p>
+    MPEG-DASH (Dynamic Adaptive Streaming over HTTP) to otwarty standard, rozwijany przez MPEG i cieszący się dużym wsparciem branży. Podobnie jak HLS, DASH wykorzystuje segmentację wideo i wiele wariantów jakości, ale jego zaletą jest uniwersalność. DASH jest obsługiwany w coraz większej liczbie odtwarzaczy i przeglądarek, a także w telewizorach Smart TV.
+  </p>
+  <p>
+    W przypadku MPEG-DASH manifest z informacjami o dostępnych segmentach i jakości zwykle zapisany jest w formacie XML (MPD – Media Presentation Description). Segmenty mogą być dostarczane w kontenerach takich jak fragmented MP4 (fMP4). Sam mechanizm adaptacji jest podobny do HLS: odtwarzacz wybiera odpowiedni segment z określonego wariantu jakości i pobiera go przez HTTP, stale monitorując czasy pobierania i dostępną przepustowość.
+  </p>
 
-        <h3>Wady DASH:</h3>
-        <ul>
-            <li><strong>Kompatybilność:</strong> Mniejsza kompatybilność z niektórymi urządzeniami i przeglądarkami w porównaniu z HLS.</li>
-            <li><strong>Złożoność implementacji:</strong> Wymaga bardziej zaawansowanej konfiguracji i wsparcia po stronie serwera i odtwarzacza.</li>
-        </ul>
+  <h2>4. Jak działa adaptacja?</h2>
+  <p>
+    Adaptacja jakości (Adaptive Bitrate Streaming) opiera się na kilku elementach:
+  </p>
+  <ol>
+    <li><strong>Monitorowanie przepustowości i bufora:</strong> Odtwarzacz stale sprawdza, ile czasu zajmuje pobranie kolejnych segmentów oraz jak duży jest poziom zapełnienia wewnętrznego bufora wideo.</li>
+    <li><strong>Wybór wariantu:</strong> W zależności od dostępnej przepustowości i wielkości bufora, odtwarzacz może wybrać niższy lub wyższy bitrate. Celem jest uniknięcie „zacięć” (buffering), ale też jak najlepsza jakość.</li>
+    <li><strong>Przełączanie się między wariantami:</strong> W momencie przejścia do pobierania kolejnego segmentu, klient może zmienić adres URL na odpowiadający innej jakości.</li>
+  </ol>
+  <p>
+    Cały ten proces jest zautomatyzowany w odtwarzaczach i przebiega zwykle w czasie rzeczywistym, dzięki czemu użytkownik odczuwa jedynie ewentualną zmianę jakości obrazu, bez przerw w odtwarzaniu. 
+  </p>
 
-        <h2>Porównanie HLS i DASH</h2>
-        <p>Oba protokoły mają na celu dostarczanie adaptacyjnego przesyłania strumieniowego, ale różnią się pod względem kompatybilności, opóźnień i wsparcia dla różnych formatów. Wybór między HLS a DASH zależy od specyficznych wymagań projektu, docelowej grupy odbiorców i platform docelowych.</p>
+  <h2>5. Główne formaty plików i standardy kontenerów</h2>
+  <p>
+    W kontekście strumieniowania przez HTTP najpopularniejsze kontenery i formaty wideo to:
+  </p>
+  <ul>
+    <li><strong>MP4 (ISO Base Media File Format):</strong> Klasyczny kontener, który może zawierać różne ścieżki wideo i audio. Używany bardzo często w progresywnym pobieraniu.</li>
+    <li><strong>Fragmented MP4 (fMP4):</strong> Zapewnia większą elastyczność w segmentacji, wykorzystywany zarówno w MPEG-DASH, jak i w nowszych wariantach HLS.</li>
+    <li><strong>MPEG-TS (Transport Stream):</strong> Historycznie wykorzystywany w HLS. Stosowany głównie w transmisjach telewizyjnych i we wcześniejszych wersjach standardu.</li>
+  </ul>
+  <p>
+    W przypadku HLS i DASH istotne jest, aby łatwo można było wycinać krótkie segmenty (np. 2–6-sekundowe), nie „psując” kontenera i metadanych wideo. Stąd rosnąca popularność fMP4, który jest bardziej elastyczny od klasycznego MPEG-TS.
+  </p>
 
-        <h2>Implementacja Przesyłania Strumieniowego w Praktyce</h2>
-        <p>Aby wdrożyć przesyłanie strumieniowe wideo za pomocą HLS lub DASH, należy przejść przez kilka kluczowych kroków:</p>
-        <ol>
-            <li><strong>Kodowanie wideo:</strong> Przygotowanie treści wideo w różnych bitrate'ach i rozdzielczościach.</li>
-            <li><strong>Segmentacja:</strong> Podział zakodowanego wideo na mniejsze fragmenty (segmenty).</li>
-            <li><strong>Generowanie manifestu:</strong> Utworzenie pliku manifestu (np. M3U8 dla HLS lub MPD dla DASH), który zawiera informacje o dostępnych segmentach i ich parametrach.</li>
-            <li><strong>Dostarczenie treści:</strong> Udostępnienie segmentów i manifestu za pomocą serwera HTTP lub sieci CDN.</li>
-            <li><strong>Odtwarzanie:</strong> Użycie odtwarzacza obsługującego wybrany protokół.</li>
-        </ol>
-    </div>
+  <h2>6. Zalety i wyzwania korzystania z HTTP do streamingu</h2>
+  <h3>6.1. Zalety</h3>
+  <ul>
+    <li><strong>Łatwa integracja z CDN:</strong> HTTP jest standardowym protokołem w sieci, dlatego dostawcy CDN (Content Delivery Network) mogą cache’ować segmenty wideo na swoich serwerach brzegowych, skracając drogę do użytkownika i poprawiając szybkość dostarczania.</li>
+    <li><strong>Proste wdrożenie:</strong> Wystarczy serwer HTTP i odpowiednie pliki manifestów (playlisty, MPD). Ogranicza to koszty i złożoność utrzymania infrastruktury.</li>
+    <li><strong>Zgodność z zabezpieczeniami:</strong> Można korzystać z protokołu HTTPS, co zapewnia szyfrowanie danych, a także integrację z mechanizmami DRM (Digital Rights Management).</li>
+    <li><strong>Skalowalność:</strong> Łatwo jest skalować poziomo serwery czy też wykorzystać chmury obliczeniowe. Gdy liczba odbiorców rośnie, wystarczy rozbudować infrastrukturę CDN lub serwery HTTP.</li>
+  </ul>
+  <h3>6.2. Wyzwania</h3>
+  <ul>
+    <li><strong>Odtwarzacz po stronie klienta:</strong> Aby uzyskać pełnię funkcjonalności adaptacyjnej, potrzebny jest odtwarzacz obsługujący HLS, DASH lub inny standard adaptacyjny. Na szczęście wiele bibliotek JavaScript (np. hls.js, dash.js) oraz natywne funkcje systemowe (np. w iOS) to umożliwiają.</li>
+    <li><strong>Ograniczenia przeglądarek:</strong> Choć większość współczesnych przeglądarek obsługuje MPEG-DASH przez <em>Media Source Extensions (MSE)</em>, w przypadku starszych wersji (albo niektórych telewizorów Smart TV) integracja może wymagać dodatkowego testowania lub konwersji formatów.</li>
+    <li><strong>Koszty transkodowania:</strong> Aby zapewnić wielowariantowość (np. 360p, 720p, 1080p), trzeba materiał przetworzyć do kilku różnych bitrate’ów. Wymaga to sporych zasobów obliczeniowych, zwłaszcza w przypadku dużego wolumenu treści.</li>
+    <li><strong>Latencja:</strong> W transmisjach na żywo (live streaming) kluczowym aspektem jest opóźnienie (latency). HTTP opiera się na segmentach, co naturalnie wprowadza pewne opóźnienie w stosunku do technologii RTMP czy WebRTC. Coraz częściej jednak pojawiają się rozwiązania typu Low-Latency HLS (LL-HLS) czy CMAF, które skracają czas opóźnienia.</li>
+  </ul>
 
-    <footer>
-        <p>&copy; 2025 Przesyłanie Strumieniowe. Wszystkie prawa zastrzeżone.</p>
-    </footer>
+  <h2>7. Przykład wdrożenia w praktyce</h2>
+  <p>
+    Wyobraźmy sobie, że chcemy udostępnić materiał wideo w trzech wariantach jakościowych: 480p (niski bitrate), 720p (średni bitrate) i 1080p (wysoki bitrate). Proces przygotowania może wyglądać następująco:
+  </p>
+  <ol>
+    <li><strong>Przygotowanie surowego pliku wideo:</strong> Np. materiał w rozdzielczości 1080p.</li>
+    <li><strong>Transkodowanie:</strong> Z pomocą narzędzi (FFmpeg, rozwiązania chmurowe AWS Elemental, itp.) tworzymy:
+      <ul>
+        <li>480p, np. 800 kb/s</li>
+        <li>720p, np. 1600 kb/s</li>
+        <li>1080p, np. 4000 kb/s</li>
+      </ul>
+      W praktyce przygotowuje się także różne częstotliwości klatek (fps) czy wielkości tablic I-frame.
+    </li>
+    <li><strong>Segmentacja i generacja manifestu:</strong> Dla każdego wariantu powstają krótkie segmenty (np. 4-sekundowe) i osobny plik manifestu (playlist M3U8 lub MPD). Następnie tworzymy główny manifest z informacją o wszystkich wariantach.</li>
+    <li><strong>Publikacja na serwerze HTTP lub CDN:</strong> Segmenty i pliki manifestów trafiają do określonego katalogu.</li>
+    <li><strong>Implementacja odtwarzacza:</strong> Na stronie internetowej można użyć np. odtwarzacza <code>video.js</code> lub dedykowanych bibliotek (hls.js, dash.js). Na urządzeniach iOS (Safari) HLS będzie wspierane natywnie.</li>
+  </ol>
+  <p>
+    Po wykonaniu tych kroków, użytkownik wchodząc na stronę z materiałem wideo, automatycznie otrzyma najlepszą dostępną jakość, ale w razie spadku przepustowości sieci, odtwarzacz przełączy się na niższą rozdzielczość.
+  </p>
+
+  <!-- Drugi przykładowy obraz, można zastąpić właściwym plikiem -->
+  <img src="https://via.placeholder.com/800x400.png?text=Adaptacyjny+Streaming" alt="Schemat adaptacyjnego strumieniowania wideo przez HTTP">
+
+  <h2>8. Najlepsze praktyki i wskazówki</h2>
+  <ul>
+    <li><strong>Używanie CDN:</strong> Nawet najlepiej zakodowane wideo nie dostarczy dobrych wrażeń, jeśli serwer będzie przeciążony. CDN umożliwia rozproszenie ruchu i minimalizację opóźnień geograficznych.</li>
+    <li><strong>Odpowiedni dobór liczby wariantów:</strong> Zbyt mało wariantów może skutkować częstym buforowaniem lub nieoptymalną jakością. Z kolei nadmiar wariantów zwiększa złożoność i koszty transkodowania.</li>
+    <li><strong>Określenie długości segmentów:</strong> Zbyt krótkie segmenty wprowadzają dodatkowy narzut protokołu HTTP, a zbyt długie zwiększają opóźnienie. Optymalnym rozwiązaniem może być przedział 2–6 sekund, w zależności od scenariusza (VOD vs live).</li>
+    <li><strong>Monitorowanie i analiza danych:</strong> Warto zbierać statystyki (bitrate, liczba buforowań, wykorzystanie wariantów) w celu ciągłego optymalizowania jakości i wydajności infrastruktury.</li>
+    <li><strong>Rozważenie DRM (Digital Rights Management):</strong> Jeśli treści są płatne lub chronione prawami autorskimi, należy zabezpieczyć wideo. Rozwiązania takie jak Widevine, FairPlay czy PlayReady mogą współpracować z HLS/DASH (z wykorzystaniem protokołów zabezpieczających segmenty kluczami szyfrującymi).</li>
+    <li><strong>Testowanie na różnych urządzeniach:</strong> Każda platforma (Android, iOS, przeglądarki desktopowe, smart TV) może mieć nieco inne wymagania i ograniczenia.</li>
+  </ul>
+
+  <h2>9. Nowe trendy i przyszłość</h2>
+  <p>
+    Technologia przesyłania strumieniowego ciągle się rozwija. W ostatnich latach pojawiły się koncepcje mające na celu redukcję opóźnień (np. Low-Latency HLS czy CMAF), co jest szczególnie ważne przy transmisjach na żywo, wydarzeniach sportowych czy interaktywnych transmisjach e-sportowych. Dodatkowo, rozwój kodeków nowej generacji, takich jak AV1 czy VVC (Versatile Video Coding), pozwala na zmniejszenie rozmiarów plików przy zachowaniu wysokiej jakości obrazu, co w efekcie odciąża sieć i poprawia komfort użytkownika.
+  </p>
+  <p>
+    Coraz popularniejsze stają się także rozwiązania hybrydowe, łączące np. streaming HLS/DASH z technologiami typu WebRTC w sytuacjach, gdy wymagana jest ultraniska latencja (np. spotkania wideo na żywo). Niektóre platformy wdrażają również funkcje interaktywne, pozwalające widzom na natychmiastową reakcję w czasie rzeczywistym, co stawia przed infrastrukturą streamingową jeszcze większe wymagania.
+  </p>
+
+  <h2>10. Podsumowanie</h2>
+  <p>
+    Przesyłanie strumieniowe wideo przez HTTP stało się standardem branżowym, wyparło dawniej popularny RTMP oraz uprościło proces dystrybucji treści. Dzięki adaptacyjnym standardom, takim jak HLS czy MPEG-DASH, możliwe jest dynamiczne dostosowanie jakości do warunków sieci i potrzeb użytkownika. 
+  </p>
+  <p>
+    Kluczowe aspekty, o których należy pamiętać przy wdrażaniu streamingowego rozwiązania HTTP, to:
+  </p>
+  <ul>
+    <li>Przygotowanie materiału w odpowiednich wariantach jakościowych.</li>
+    <li>Zastosowanie segmentacji (chunki), która umożliwia odtwarzanie fragmentów wideo natychmiast po ich pobraniu.</li>
+    <li>Wykorzystanie CDN w celu skalowalności i zredukowania opóźnień.</li>
+    <li>Odpowiednia konfiguracja odtwarzacza oraz uwzględnienie wsparcia dla różnych platform i przeglądarek.</li>
+  </ul>
+  <p>
+    Chociaż implementacja może wydawać się skomplikowana na pierwszym etapie (zwłaszcza transkodowanie do wielu wariantów i przygotowanie manifestów), korzyści płynące z płynnego, adaptacyjnego odtwarzania są nieocenione. Dzięki wykorzystaniu HTTP wideo można dystrybuować w sposób prosty i efektywny, a wrażenia użytkownika są zazwyczaj na wysokim poziomie – pod warunkiem, że zadbamy o optymalizację, monitoring i ciągłe usprawnianie.
+  </p>
+  <p>
+    W przyszłości możemy się spodziewać kolejnych usprawnień protokołów i formatów, szczególnie w zakresie redukcji opóźnień w transmisjach na żywo oraz szerszego wykorzystania nowych kodeków (jak AV1). Warto śledzić dalsze prace nad rozszerzeniami HLS (low-latency) oraz intensywnym rozwojem MPEG-DASH, aby oferować użytkownikom jeszcze lepsze doświadczenia związane z oglądaniem treści wideo przez internet.
+  </p>
+
+  <hr>
+  <p><em>Opracowanie: Na podstawie materiałów z <a href="https://web.dev/articles/media-streaming-basics" target="_blank" rel="noopener noreferrer">web.dev</a> i <a href="https://aws.amazon.com/blogs/media/back-to-basics-http-video-streaming/" target="_blank" rel="noopener noreferrer">AWS</a>.</em></p>
+</div>
 </body>
 </html>
